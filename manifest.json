@@ -1,0 +1,30 @@
+{
+  "name": "Caffeine Goblin",
+  "short_name": "Goblin",
+  "description": "A cute RPG study companion with XP, quests, achievements, focus timers, streaks, dark mode, and offline support.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7e8ff",
+  "theme_color": "#8c52ff",
+  "lang": "en",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

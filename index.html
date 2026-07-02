@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Caffeine Goblin ☕🐸</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8c52ff">
+
+<style>
+
+:root{
+  --bg:#f7e8ff;
+  --card:#ffffff;
+  --primary:#8c52ff;
+  --text:#222;
+}
+
+body.dark{
+  --bg:#121212;
+  --card:#1f1f1f;
+  --text:#f0f0f0;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  transition:.3s;
+}
+
+.container{
+  max-width:700px;
+  margin:auto;
+  padding:15px;
+}
+
+.header{
+  text-align:center;
+  padding:20px;
+}
+
+.goblin{
+  font-size:4rem;
+  animation:bounce 2s infinite;
+}
+
+@keyframes bounce{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-10px);}
+}
+
+.card{
+  background:var(--card);
+  padding:15px;
+  border-radius:20px;
+  margin-bottom:15px;
+  box-shadow:0 5px 12px rgba(0,0,0,.1);
+}
+
+button{
+  border:none;
+  background:var(--primary);
+  color:white;
+  padding:12px;
+  border-radius:12px;
+  width:100%;
+  margin-top:8px;
+  font-size:1rem;
+}
+
+.progress{
+  width:100%;
+  height:20px;
+  background:#ddd;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  width:0%;
+  height:100%;
+  background:var(--primary);
+}
+
+.quest{
+  padding:10px;
+  margin-top:10px;
+  border-radius:12px;
+  background:#eee;
+}
+
+body.dark .quest{
+  background:#2a2a2a;
+}
+
+.skin{
+  padding:10px;
+  margin-top:10px;
+  border-radius:12px;
+  background:#eee;
+}
+
+.timer{
+  text-align:center;
+  font-size:2rem;
+  margin:15px 0;
+}
+
+.status{
+  text-align:center;
+  font-weight:bold;
+}
+
+.sparkle{
+  position:fixed;
+  pointer-events:none;
+  animation:floatUp 3s linear forwards;
+}
+
+@keyframes floatUp{
+  from{
+    opacity:1;
+    transform:translateY(0);
+  }
+  to{
+    opacity:0;
+    transform:translateY(-100px);
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+  <div id="goblinSkin" class="goblin">☕🐸</div>
+  <h1>Caffeine Goblin</h1>
+  <p>Your espresso-powered study companion.</p>
+</div>
+
+<div class="card">
+  <h2>⭐ Level & XP</h2>
+
+  <p>Level: <span id="level">1</span></p>
+  <p>XP: <span id="xp">0</span></p>
+
+  <div class="progress">
+    <div id="xpBar" class="progress-fill"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>🔥 Daily Streak</h2>
+  <p><span id="streak">1</span> day streak</p>
+</div>
+
+<div class="card">
+  <h2>📚 Daily Quest</h2>
+
+  <div id="questBox" class="quest">
+    Complete a study session.
+  </div>
+
+  <button onclick="completeQuest()">
+    Complete Quest
+  </button>
+</div>
+
+<div class="card">
+  <h2>⏱ Study Timer</h2>
+
+  <div class="timer" id="timer">
+    25:00
+  </div>
+
+  <button onclick="startTimer()">
+    Start Focus Session
+  </button>
+
+  <button onclick="resetTimer()">
+    Reset Timer
+  </button>
+</div>
+
+<div class="card">
+  <h2>😊 Mood Tracker</h2>
+
+  <button onclick="setMood('😄 Great')">😄 Great</button>
+  <button onclick="setMood('🙂 Okay')">🙂 Okay</button>
+  <button onclick="setMood('😐 Meh')">😐 Meh</button>
+  <button onclick="setMood('😵 Chaos')">😵 Chaos</button>
+
+  <p id="moodDisplay">No mood logged.</p>
+</div>
+
+<div class="card">
+  <h2>🏆 Achievements</h2>
+
+  <ul id="achievements">
+    <li>🎓 First Steps (Locked)</li>
+    <li>🔥 Streak Master (Locked)</li>
+    <li>⭐ Level 5 Hero (Locked)</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>🎁 Rewards</h2>
+
+  <p id="rewardText">
+    No rewards yet.
+  </p>
+</div>
+
+<div class="card">
+  <h2>🐾 Goblin Skins</h2>
+
+  <div class="skin">
+    ☕🐸 Classic Caffeine Goblin
+  </div>
+
+  <div class="skin">
+    🌙🐸 Night Shift Goblin
+  </div>
+
+  <div class="skin">
+    ⚡🐸 Energy Surge Goblin
+  </div>
+</div>
+
+<div class="card">
+  <h2>🌙 Settings</h2>
+
+  <button onclick="toggleDarkMode()">
+    Toggle Dark Mode
+  </button>
+</div>
+
+<div class="card">
+  <h2>📡 Connection</h2>
+
+  <div id="status" class="status">
+    🟢 Online
+  </div>
+</div>
+
+</div>
+
+<script>
+  // =========================
+// SAVE DATA
+// =========================
+
+let xp = Number(localStorage.getItem("xp")) || 0;
+let level = Number(localStorage.getItem("level")) || 1;
+let streak = Number(localStorage.getItem("streak")) || 1;
+let currentQuest = localStorage.getItem("quest") || "";
+let completedQuest =
+localStorage.getItem("completedQuest") === "true";
+
+// =========================
+// QUESTS
+// =========================
+
+const quests = [
+  "Study for 15 minutes 📚",
+  "Complete one homework task ✏️",
+  "Review your notes 📝",
+  "Read 5 pages of a textbook 📖",
+  "Organize your study materials 🎒",
+  "Complete a focus session ⏱️",
+  "Drink water during study time 💧",
+  "Practice 10 questions 🧠"
+];
+
+if(currentQuest === ""){
+  currentQuest =
+  quests[Math.floor(Math.random()*quests.length)];
+
+  localStorage.setItem("quest", currentQuest);
+}
+
+document.getElementById("questBox").innerText =
+currentQuest;
+
+// =========================
+// UPDATE UI
+// =========================
+
+function updateUI(){
+
+  document.getElementById("xp").innerText = xp;
+  document.getElementById("level").innerText = level;
+  document.getElementById("streak").innerText = streak;
+
+  let neededXP = level * 100;
+
+  let percentage =
+  Math.min((xp / neededXP) * 100,100);
+
+  document.getElementById("xpBar")
+  .style.width = percentage + "%";
+
+  localStorage.setItem("xp", xp);
+  localStorage.setItem("level", level);
+  localStorage.setItem("streak", streak);
+}
+
+// =========================
+// XP SYSTEM
+// =========================
+
+function addXP(amount){
+
+  xp += amount;
+
+  let neededXP = level * 100;
+
+  while(xp >= neededXP){
+
+    xp -= neededXP;
+
+    level++;
+
+    rewardDrop();
+
+    neededXP = level * 100;
+  }
+
+  updateUI();
+
+  checkAchievements();
+}
+
+// =========================
+// QUEST COMPLETE
+// =========================
+
+function completeQuest(){
+
+  if(completedQuest){
+    alert("📚 Today's quest already completed!");
+    return;
+  }
+
+  completedQuest = true;
+
+  localStorage.setItem(
+    "completedQuest",
+    "true"
+  );
+
+  addXP(50);
+
+  alert(
+    "🎉 Quest Complete! +50 XP"
+  );
+
+  createSparkle();
+}
+
+// =========================
+// ACHIEVEMENTS
+// =========================
+
+function checkAchievements(){
+
+  const achievements =
+  document.getElementById(
+    "achievements"
+  );
+
+  let list = "";
+
+  if(level >= 1){
+    list +=
+    "<li>🎓 First Steps (Unlocked)</li>";
+  }else{
+    list +=
+    "<li>🎓 First Steps (Locked)</li>";
+  }
+
+  if(streak >= 7){
+    list +=
+    "<li>🔥 Streak Master (Unlocked)</li>";
+  }else{
+    list +=
+    "<li>🔥 Streak Master (Locked)</li>";
+  }
+
+  if(level >= 5){
+    list +=
+    "<li>⭐ Level 5 Hero (Unlocked)</li>";
+  }else{
+    list +=
+    "<li>⭐ Level 5 Hero (Locked)</li>";
+  }
+
+  achievements.innerHTML = list;
+}
+
+// =========================
+// REWARDS
+// =========================
+
+const rewards = [
+  "☕ Bonus Espresso Bean",
+  "✨ Pocket Stardust",
+  "🐸 Goblin Sticker",
+  "📚 Knowledge Scroll",
+  "⚡ Energy Burst",
+  "🌙 Night Study Charm"
+];
+
+function rewardDrop(){
+
+  let reward =
+  rewards[
+    Math.floor(
+      Math.random()*rewards.length
+    )
+  ];
+
+  document.getElementById(
+    "rewardText"
+  ).innerText =
+  "Unlocked: " + reward;
+
+  localStorage.setItem(
+    "rewardText",
+    reward
+  );
+}
+
+const savedReward =
+localStorage.getItem("rewardText");
+
+if(savedReward){
+  document.getElementById(
+    "rewardText"
+  ).innerText =
+  "Unlocked: " + savedReward;
+}
+
+// =========================
+// SKINS
+// =========================
+
+function unlockSkin(){
+
+  const skin =
+  document.getElementById(
+    "goblinSkin"
+  );
+
+  if(level >= 10){
+    skin.innerText = "⚡🐸";
+  }
+  else if(level >= 5){
+    skin.innerText = "🌙🐸";
+  }
+  else{
+    skin.innerText = "☕🐸";
+  }
+}
+
+// =========================
+// STREAK SYSTEM
+// =========================
+
+let today =
+new Date().toDateString();
+
+let lastVisit =
+localStorage.getItem("lastVisit");
+
+if(lastVisit !== today){
+
+  streak++;
+
+  localStorage.setItem(
+    "streak",
+    streak
+  );
+
+  localStorage.setItem(
+    "lastVisit",
+    today
+  );
+}
+
+// =========================
+// MOOD TRACKER
+// =========================
+
+function setMood(mood){
+
+  document.getElementById(
+    "moodDisplay"
+  ).innerText =
+  "Current Mood: " + mood;
+
+  localStorage.setItem(
+    "mood",
+    mood
+  );
+
+  addXP(10);
+}
+
+const savedMood =
+localStorage.getItem("mood");
+
+if(savedMood){
+
+  document.getElementById(
+    "moodDisplay"
+  ).innerText =
+  "Current Mood: " + savedMood;
+}
+
+// =========================
+// SPARKLE EFFECT
+// =========================
+
+function createSparkle(){
+
+  const sparkle =
+  document.createElement("div");
+
+  sparkle.className =
+  "sparkle";
+
+  sparkle.innerText =
+  "✨";
+
+  sparkle.style.left =
+  Math.random()*90 + "%";
+
+  sparkle.style.top =
+  "70%";
+
+  document.body.appendChild(
+    sparkle
+  );
+
+  setTimeout(()=>{
+    sparkle.remove();
+  },3000);
+}
+
+// =========================
+// STARTUP
+// =========================
+
+updateUI();
+checkAchievements();
+unlockSkin();
+//
+// =========================
+// TIMER SYSTEM
+// =========================
+//
+
+let time = 1500;
+let timerRunning = false;
+let timerInterval;
+
+function updateTimer(){
+
+  const minutes =
+  Math.floor(time / 60);
+
+  const seconds =
+  time % 60;
+
+  document.getElementById("timer")
+  .innerText =
+  `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+}
+
+function startTimer(){
+
+  if(timerRunning) return;
+
+  timerRunning = true;
+
+  timerInterval =
+  setInterval(()=>{
+
+    time--;
+
+    updateTimer();
+
+    if(time <= 0){
+
+      clearInterval(timerInterval);
+
+      timerRunning = false;
+
+      addXP(25);
+
+      alert(
+        "🎉 Focus Session Complete!\n\n+25 XP earned!"
+      );
+
+      createSparkle();
+
+      time = 1500;
+
+      updateTimer();
+    }
+
+  },1000);
+}
+
+function resetTimer(){
+
+  clearInterval(timerInterval);
+
+  timerRunning = false;
+
+  time = 1500;
+
+  updateTimer();
+}
+
+updateTimer();
+
+//
+// =========================
+// DARK MODE
+// =========================
+//
+
+function toggleDarkMode(){
+
+  document.body.classList.toggle(
+    "dark"
+  );
+
+  if(
+    document.body.classList.contains(
+      "dark"
+    )
+  ){
+
+    localStorage.setItem(
+      "theme",
+      "dark"
+    );
+
+  }else{
+
+    localStorage.setItem(
+      "theme",
+      "light"
+    );
+  }
+}
+
+if(
+  localStorage.getItem("theme")
+  === "dark"
+){
+  document.body.classList.add(
+    "dark"
+  );
+}
+
+//
+// =========================
+// ONLINE / OFFLINE STATUS
+// =========================
+//
+
+function updateConnectionStatus(){
+
+  const status =
+  document.getElementById(
+    "status"
+  );
+
+  if(navigator.onLine){
+
+    status.innerText =
+    "🟢 Online";
+
+  }else{
+
+    status.innerText =
+    "📴 Offline Mode";
+  }
+}
+
+window.addEventListener(
+  "online",
+  updateConnectionStatus
+);
+
+window.addEventListener(
+  "offline",
+  updateConnectionStatus
+);
+
+updateConnectionStatus();
+
+//
+// =========================
+// SERVICE WORKER
+// =========================
+//
+
+if(
+  "serviceWorker" in navigator
+){
+
+  window.addEventListener(
+    "load",
+    ()=>{
+
+      navigator.serviceWorker
+      .register(
+        "./service-worker.js"
+      )
+      .then(()=>{
+
+        console.log(
+          "🐸 Service Worker Registered"
+        );
+
+      })
+      .catch(error=>{
+
+        console.log(
+          error
+        );
+
+      });
+
+    }
+  );
+}
+
+//
+// =========================
+// DAILY QUEST RESET
+// =========================
+//
+
+const questDate =
+localStorage.getItem(
+  "questDate"
+);
+
+const todayDate =
+new Date().toDateString();
+
+if(
+  questDate !== todayDate
+){
+
+  localStorage.setItem(
+    "questDate",
+    todayDate
+  );
+
+  localStorage.setItem(
+    "completedQuest",
+    "false"
+  );
+
+  const newQuest =
+  quests[
+    Math.floor(
+      Math.random() *
+      quests.length
+    )
+  ];
+
+  localStorage.setItem(
+    "quest",
+    newQuest
+  );
+
+  document.getElementById(
+    "questBox"
+  ).innerText =
+  newQuest;
+}
+
+//
+// =========================
+// FINAL STARTUP
+// =========================
+//
+
+updateUI();
+checkAchievements();
+unlockSkin();
+updateTimer();
+updateConnectionStatus();
+
+</script>
+
+</body>
+</html>
